@@ -10,7 +10,13 @@
 
 <div id='app'>
     <div class='container'>
-        
+        <a-pod>
+            <h3 slot='title'>#1</h3>
+            <p slot='caption'>Here's today's Astronomy Picture of the Day!</p>
+        </a-pod> 
+        <a-pod date='2018-08-07'>
+            <p slot='caption' slot-scope='pic'>Here's the Picture from {{pic.date}}</p>
+        </a-pod>
     </div>
 </div>
 
@@ -18,27 +24,43 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 <script>
-    var vm = new Vue({
-        el: '#app',
-        data: {
-            imgSrc: '',
-            imgTitle: ''
+    Vue.component('a-pod', {
+        template: `
+            <div>
+                <slot name='title'><h3>Untitled</h3></slot>
+                <img width='300px' height='200px' :src="imgSrc" :title="imgTitle">
+                <slot name='caption' :date='date'><p>unknown date</p></slot>
+            </div>`,
+        props: ['date'],
+        data: function() {
+            return {
+                imgSrc: '',
+                imgTitle: ''
+            }
         },
         created: function(){
-            this.fetchAsteroids();
+            this.fetchApod();
         },
         methods: {
-            fetchAsteroids: function(){
+            fetchApod: function(){
                 const apiKey = 'nr5xQzQFLpt6ale3yGIVcRhKbIAFKydmexOH0Fni'
-                const url = `https://api.nasa.gov/neo/rest/v1/neo/browse?api_key=${apiKey}`
+                var url = `https://api.nasa.gov/planetary/apod?api_key=${apiKey}`
+                if (this.date) {
+                    url += '&date=' + this.date
+                }
+                var self = this
                 axios.get(url)
                     .then(res => {
-                        vm.asteroids = res.data.near_earth_objects.slice(10,20);
+                        this.imgSrc = res.data.url;
+                        this.imgTitle = res.data.title
                     })
                     .catch(err => {
                         console.log(err)
                     })
             }
         }
+    })
+    var vm = new Vue({
+        el: '#app'
     })
 </script>
